@@ -100,20 +100,28 @@ null _ = False
 
 -- build a one element Set
 singleton :: a -> Set a
-singleton x = undefined
+singleton x = Set { unSet = Node x Empty Empty }
 
 -- insert an element *x* of type *a* into Set *s* make sure there are no
 -- duplicates!
 insert :: (Ord a) => a -> Set a -> Set a
-insert x s = undefined
+insert x s = Set { unSet = treeInsert x . unSet $ s }
 
 -- join two Sets together be careful not to introduce duplicates.
 union :: (Ord a) => Set a -> Set a -> Set a
-union s1 s2 = undefined
+union s1 s2 = Set { unSet = foldr treeInsert (unSet s1) (toList s2) } 
 
 -- return, as a Set, the common elements between two Sets
 intersection :: (Ord a) => Set a -> Set a -> Set a
-intersection s1 s2 = undefined
+intersection s1 s2 = fromList $ getCommon (toList s1) (toList s2) []
+  where 
+    -- getCommon function only works with sorted lists
+    getCommon [] _ acc = acc
+    getCommon _ [] acc = acc
+    getCommon l1 l2 acc
+      | head l1 < head l2 = getCommon (tail l1) l2 acc
+      | head l1 > head l2 = getCommon l1 (tail l2) acc
+      | otherwise = getCommon (tail l1) (tail l2) (head l1 : acc) -- add to acc when head of both lists are equal
 
 -- all the elements in *s1* not in *s2*
 -- {1,2,3,4} `difference` {3,4} => {1,2}
