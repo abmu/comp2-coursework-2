@@ -84,7 +84,7 @@ instance (Ord a) => Eq (Set a) where
 -- you should be able to satisfy this property quite easily
 eqProp :: IO ()
 eqProp =
-  quickCheck ((\xs -> (fromList . C.toList . C.fromList $ xs) == fromList xs) :: [Char] -> Bool)
+  quickCheck ((\xs -> (fromList . HS.toList . HS.fromList $ xs) == fromList xs) :: [Char] -> Bool)
 
 {-
    PART 3. Your Set should contain the following functions. DO NOT CHANGE THE
