@@ -62,7 +62,7 @@ treeInsert x (Node y left right)
 -- toList {2,1,4,3} => [1,2,3,4]
 -- the output must be sorted.
 toList :: Ord a => Set a -> [a]
-toList s = inOrderTraversal . unSet $ s
+toList = inOrderTraversal . unSet
 
 -- fromList: do not forget to remove duplicates!
 fromList :: Ord a => [a] -> Set a
@@ -77,7 +77,7 @@ toFromListProp =
 
 -- test if two sets have the same elements (pointwise equivalent).
 instance (Ord a) => Eq (Set a) where
-  s1 == s2 = undefined
+  s1 == s2 = toList s1 == toList s2
 
 -- you should be able to satisfy this property quite easily
 eqProp :: IO ()
