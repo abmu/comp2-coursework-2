@@ -37,22 +37,9 @@ import Test.QuickCheck
    You need to define a Set datatype.
 -}
 
--- you **MUST** change this to your own data type. The declaration of Set a =
--- Int is just to allow you to load the file into ghci without an error, it
--- cannot be used to represent a set.
-data Set a = Int
+data BinaryTree a = Empty | Node a (BinaryTree a) (BinaryTree a)
 
--- data BinaryTree a = Empty | Node a (BinaryTree a) (BinaryTree a)
-
--- newtype Set a = Set { unSet :: BinaryTree a }
-
--- inOrderTraversal :: BinaryTree a -> [a]
--- inOrderTraversal Empty = []
--- inOrderTraversal (Node a left right) = inOrderTraversal left ++ [a] ++ inOrderTraversal right
-
--- makeBinaryTree :: [a] -> BinaryTree a
--- makeBinaryTree [] = Empty
--- makeBinaryTree (x:xs) = Node x (Empty) (Empty)
+data Set a = Set { unSet :: BinaryTree a }
 
 {-
    PART 2.
@@ -61,10 +48,21 @@ data Set a = Int
    will fail the coursework!
 -}
 
+inOrderTraversal :: BinaryTree a -> [a]
+inOrderTraversal Empty = []
+inOrderTraversal (Node a left right) = inOrderTraversal left ++ [a] ++ inOrderTraversal right
+
 -- toList {2,1,4,3} => [1,2,3,4]
 -- the output must be sorted.
 toList :: Ord a => Set a -> [a]
-toList s = undefined
+toList s = (inOrderTraversal . unSet) s
+
+insert :: a -> BinaryTree a -> BinaryTree a
+insert x Empty = Node x Empty Empty
+insert x (Node y left right)
+  | x < y = Node y (insert x left) right
+  | x > y = Node y left (insert x right)
+  | otherwise = Node y left right
 
 -- fromList: do not forget to remove duplicates!
 fromList :: Ord a => [a] -> Set a
