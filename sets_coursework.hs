@@ -91,11 +91,12 @@ eqProp =
 
 -- the empty set
 empty :: Set a
-empty = undefined
+empty = Set { unSet = Empty }
 
 -- is it the empty set?
 null :: Set a -> Bool
-null s = undefined
+null (Set { unSet = Empty }) = True
+null _ = False
 
 -- build a one element Set
 singleton :: a -> Set a
