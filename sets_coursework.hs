@@ -50,23 +50,23 @@ data Set a = Set { unSet :: BinaryTree a }
 
 inOrderTraversal :: BinaryTree a -> [a]
 inOrderTraversal Empty = []
-inOrderTraversal (Node a left right) = inOrderTraversal left ++ [a] ++ inOrderTraversal right
+inOrderTraversal (Node x left right) = inOrderTraversal left ++ [x] ++ inOrderTraversal right
+
+treeInsert :: Ord a => a -> BinaryTree a -> BinaryTree a
+treeInsert x Empty = Node x Empty Empty
+treeInsert x (Node y left right)
+  | x < y = Node y (treeInsert x left) right
+  | x > y = Node y left (treeInsert x right)
+  | otherwise = Node y left right -- keep tree the same if the element is already in it
 
 -- toList {2,1,4,3} => [1,2,3,4]
 -- the output must be sorted.
 toList :: Ord a => Set a -> [a]
-toList s = (inOrderTraversal . unSet) s
-
-insert :: a -> BinaryTree a -> BinaryTree a
-insert x Empty = Node x Empty Empty
-insert x (Node y left right)
-  | x < y = Node y (insert x left) right
-  | x > y = Node y left (insert x right)
-  | otherwise = Node y left right
+toList s = inOrderTraversal . unSet $ s
 
 -- fromList: do not forget to remove duplicates!
 fromList :: Ord a => [a] -> Set a
-fromList xs = undefined
+fromList xs = Set { unSet = foldr treeInsert Empty xs }
 
 -- Make sure you satisfy this property. If it fails, then all of the functions
 -- on Part 3 will also fail their tests
