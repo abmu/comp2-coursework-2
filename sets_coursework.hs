@@ -37,7 +37,8 @@ import Test.QuickCheck
    You need to define a Set datatype.
 -}
 
-data BinaryTree a = Empty | Node a (BinaryTree a) (BinaryTree a)
+-- TRY IMPLEMENT SELF BALANCING TREE
+data BinaryTree a = Empty | Node a (BinaryTree a) (BinaryTree a) -- BST
 
 data Set a = Set { unSet :: BinaryTree a }
 
@@ -47,6 +48,13 @@ data Set a = Set { unSet :: BinaryTree a }
    do not work properly, it is impossible to test your other functions, and you
    will fail the coursework!
 -}
+
+treeSearch :: Ord a => a -> BinaryTree a -> Bool
+treeSearch x Empty = False
+treeSearch x (Node y left right)
+  | x < y = treeSearch x left
+  | x > y = treeSearch x right
+  | otherwise = True
 
 inOrderTraversal :: BinaryTree a -> [a]
 inOrderTraversal Empty = []
@@ -109,12 +117,12 @@ insert x s = Set { unSet = treeInsert x . unSet $ s }
 
 -- join two Sets together be careful not to introduce duplicates.
 union :: (Ord a) => Set a -> Set a -> Set a
-union s1 s2 = Set { unSet = foldr treeInsert (unSet s1) (toList s2) } 
+union s1 s2 = Set { unSet = foldr treeInsert (unSet s1) (toList s2) }
 
 -- return, as a Set, the common elements between two Sets
 intersection :: (Ord a) => Set a -> Set a -> Set a
 intersection s1 s2 = fromList $ getCommon (toList s1) (toList s2) []
-  where 
+  where
     -- getCommon function only works with sorted lists
     getCommon [] _ acc = acc
     getCommon _ [] acc = acc
@@ -127,11 +135,19 @@ intersection s1 s2 = fromList $ getCommon (toList s1) (toList s2) []
 -- {1,2,3,4} `difference` {3,4} => {1,2}
 -- {} `difference` {0} => {}
 difference :: (Ord a) => Set a -> Set a -> Set a
-difference s1 s2 = undefined
+difference s1 s2 = fromList $ getDifference (toList s1) (toList s2) []
+  where
+    -- getDifference function only works with sorted lists
+    getDifference [] _ acc = acc
+    getDifference l1 [] acc = acc ++ l1
+    getDifference l1 l2 acc
+      | head l1 < head l2 = getDifference (tail l1) l2 (head l1 : acc)
+      | head l1 > head l2 = getDifference l1 (tail l2) acc
+      | otherwise = getDifference (tail l1) (tail l2) acc -- if head of both lists are equal ignore them and go to the next element in both lists
 
 -- is element *x* in the Set s1?
 member :: (Ord a) => a -> Set a -> Bool
-member x s1 = undefined
+member x = treeSearch x . unSet
 
 -- how many elements are there in the Set?
 cardinality :: Set a -> Int
