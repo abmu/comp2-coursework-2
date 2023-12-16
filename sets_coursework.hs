@@ -49,6 +49,18 @@ data Set a = Set { unSet :: BinaryTree a }
    will fail the coursework!
 -}
 
+treeMap :: (a -> b) -> BinaryTree a -> BinaryTree b
+treeMap f Empty = Empty
+treeMap f (Node x left right) = Node (f x) (treeMap f left) (treeMap f right)
+
+treeMerge :: Ord a => BinaryTree a -> BinaryTree a -> BinaryTree a
+treeMerge Empty tree2 = tree2
+treeMerge (Node x left right) tree2 = treeMerge right $ treeMerge left $ treeInsert x tree2
+
+treeSize :: BinaryTree a -> Int
+treeSize Empty = 0
+treeSize (Node x left right) = 1 + treeSize left + treeSize right
+
 treeSearch :: Ord a => a -> BinaryTree a -> Bool
 treeSearch x Empty = False
 treeSearch x (Node y left right)
@@ -113,11 +125,13 @@ singleton x = Set { unSet = Node x Empty Empty }
 -- insert an element *x* of type *a* into Set *s* make sure there are no
 -- duplicates!
 insert :: (Ord a) => a -> Set a -> Set a
-insert x s = Set { unSet = treeInsert x . unSet $ s }
+insert x s = Set { unSet = treeInsert x $ unSet s }
 
 -- join two Sets together be careful not to introduce duplicates.
+-- union :: (Ord a) => Set a -> Set a -> Set a
+-- union s1 s2 = Set { unSet = foldr treeInsert (unSet s1) (toList s2) }
 union :: (Ord a) => Set a -> Set a -> Set a
-union s1 s2 = Set { unSet = foldr treeInsert (unSet s1) (toList s2) }
+union s1 s2 = Set { unSet = treeMerge (unSet s1) (unSet s2) }
 
 -- return, as a Set, the common elements between two Sets
 intersection :: (Ord a) => Set a -> Set a -> Set a
@@ -151,15 +165,15 @@ member x = treeSearch x . unSet
 
 -- how many elements are there in the Set?
 cardinality :: Set a -> Int
-cardinality s = undefined
+cardinality = treeSize . unSet
 
 -- apply a function to every element in the Set
 setmap :: (Ord b) => (a -> b) -> Set a -> Set b
-setmap f s = undefined
+setmap f s = Set { unSet = treeMap f $ unSet s }
 
 -- right fold a Set using a function *f*
 setfoldr :: (a -> b -> b) -> Set a -> b -> b
-setfoldr f s acc = undefined
+setfoldr f s acc = foldr f acc $ inOrderTraversal $ unSet s
 
 -- remove an element *x* from the set
 -- return the set unaltered if *x* is not present
