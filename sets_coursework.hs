@@ -49,6 +49,22 @@ data Set a = Set { unSet :: BinaryTree a }
    will fail the coursework!
 -}
 
+treeRemove :: Ord a => a -> BinaryTree a -> BinaryTree a
+treeRemove _ Empty = Empty
+treeRemove x (Node y left right)
+  | x < y = Node y (treeRemove x left) right
+  | x > y = Node y left (treeRemove x right)
+-- otherwise x == y
+-- NOT NEEDED treeRemove _ (Node _ Empty Empty) = Empty
+treeRemove _ (Node _ left Empty) = left
+treeRemove _ (Node _ Empty right) = right
+treeRemove _ (Node _ left right) = Node newKey left (treeRemove newKey right) -- newKey is the in order traversal successor
+  where
+    newKey = minKey right
+    -- minKey function only works with non empty tree
+    minKey (Node key Empty _) = key
+    minKey (Node _ left _) = minKey left
+
 treeMap :: (a -> b) -> BinaryTree a -> BinaryTree b
 treeMap f Empty = Empty
 treeMap f (Node x left right) = Node (f x) (treeMap f left) (treeMap f right)
@@ -59,10 +75,10 @@ treeMerge (Node x left right) tree2 = treeMerge right $ treeMerge left $ treeIns
 
 treeSize :: BinaryTree a -> Int
 treeSize Empty = 0
-treeSize (Node x left right) = 1 + treeSize left + treeSize right
+treeSize (Node _ left right) = 1 + treeSize left + treeSize right
 
 treeSearch :: Ord a => a -> BinaryTree a -> Bool
-treeSearch x Empty = False
+treeSearch _ Empty = False
 treeSearch x (Node y left right)
   | x < y = treeSearch x left
   | x > y = treeSearch x right
@@ -172,13 +188,15 @@ setmap :: (Ord b) => (a -> b) -> Set a -> Set b
 setmap f s = Set { unSet = treeMap f $ unSet s }
 
 -- right fold a Set using a function *f*
-setfoldr :: (a -> b -> b) -> Set a -> b -> b
-setfoldr f s acc = foldr f acc $ inOrderTraversal $ unSet s
+-- setfoldr :: (a -> b -> b) -> Set a -> b -> b
+-- setfoldr f s acc = foldr f acc $ inOrderTraversal $ unSet s
+setfoldr :: (Ord a) => (a -> b -> b) -> Set a -> b -> b -- CHANGED FUNCTION SIGNATURE TO ADD Ord a
+setfoldr f s acc = foldr f acc $ toList s
 
 -- remove an element *x* from the set
 -- return the set unaltered if *x* is not present
-removeSet :: (Eq a) => a -> Set a -> Set a
-removeSet x s = undefined
+removeSet :: (Eq a, Ord a) => a -> Set a -> Set a -- CHANGED FUNCTION SIGNATURE TO ADD Ord a
+removeSet x s = Set { unSet = treeRemove x $ unSet s }
 
 -- powerset of a set
 -- powerset {1,2} => { {}, {1}, {2}, {1,2} }
