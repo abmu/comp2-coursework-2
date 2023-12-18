@@ -188,8 +188,6 @@ setmap :: (Ord b) => (a -> b) -> Set a -> Set b
 setmap f s = Set { unSet = treeMap f $ unSet s }
 
 -- right fold a Set using a function *f*
--- setfoldr :: (a -> b -> b) -> Set a -> b -> b
--- setfoldr f s acc = foldr f acc $ inOrderTraversal $ unSet s
 setfoldr :: (Ord a) => (a -> b -> b) -> Set a -> b -> b -- CHANGED FUNCTION SIGNATURE TO ADD Ord a
 setfoldr f s acc = foldr f acc $ toList s
 
