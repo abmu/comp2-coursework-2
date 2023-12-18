@@ -198,17 +198,21 @@ setfoldr f s acc = foldr f acc $ toList s
 removeSet :: (Eq a, Ord a) => a -> Set a -> Set a -- CHANGED FUNCTION SIGNATURE TO ADD Ord a
 removeSet x s = Set { unSet = treeRemove x $ unSet s }
 
+instance (Ord a) => Ord (Set a) where
+  compare s1 s2 = compare (toList s1) (toList s2)
+
 -- powerset of a set
 -- powerset {1,2} => { {}, {1}, {2}, {1,2} }
-powerSet :: Set a -> Set (Set a)
-powerSet s = undefined
-
-allSubLists :: [a] -> [[a]]
-allSubLists xs = concatMap (subLists xs) [0..length xs]
+-- NEED TO CREATE CUSTOM ORD CLASS FOR SETS
+powerSet :: (Ord a) => Set a -> Set (Set a)  -- CHANGED FUNCTION SIGNATURE TO ADD Ord a
+powerSet s = fromList $ map fromList $ allSubLists $ toList s
   where
-    subLists _ 0 = [[]]
-    subLists [] _ = []
-    subLists (x:xs) size = map (x :) (subLists xs (size - 1)) ++ subLists xs size
+    allSubLists :: [a] -> [[a]]
+    allSubLists xs = concatMap (subLists xs) [0..length xs]
+      where
+        subLists _ 0 = [[]]
+        subLists [] _ = []
+        subLists (x:xs) size = map (x :) (subLists xs (size - 1)) ++ subLists xs size
 
 {-
    ON MARKING:
