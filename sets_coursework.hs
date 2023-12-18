@@ -55,7 +55,7 @@ treeRemove x (Node y left right)
   | x < y = Node y (treeRemove x left) right
   | x > y = Node y left (treeRemove x right)
 -- otherwise x == y
--- NOT NEEDED treeRemove _ (Node _ Empty Empty) = Empty
+-- NOT NEEDED --> treeRemove _ (Node _ Empty Empty) = Empty
 treeRemove _ (Node _ left Empty) = left
 treeRemove _ (Node _ Empty right) = right
 treeRemove _ (Node _ left right) = Node newKey left (treeRemove newKey right) -- newKey is the in order traversal successor
@@ -202,6 +202,13 @@ removeSet x s = Set { unSet = treeRemove x $ unSet s }
 -- powerset {1,2} => { {}, {1}, {2}, {1,2} }
 powerSet :: Set a -> Set (Set a)
 powerSet s = undefined
+
+allSubLists :: [a] -> [[a]]
+allSubLists xs = concatMap (subLists xs) [0..length xs]
+  where
+    subLists _ 0 = [[]]
+    subLists [] _ = []
+    subLists (x:xs) size = map (x :) (subLists xs (size - 1)) ++ subLists xs size
 
 {-
    ON MARKING:
