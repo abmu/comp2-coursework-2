@@ -37,8 +37,8 @@ import Test.QuickCheck
    You need to define a Set datatype.
 -}
 
--- TRY IMPLEMENT SELF BALANCING TREE
-data BinaryTree a = Empty | Node a (BinaryTree a) (BinaryTree a) -- BST
+-- Binary search tree
+data BinaryTree a = Empty | Node a (BinaryTree a) (BinaryTree a)
 
 data Set a = Set { unSet :: BinaryTree a }
 
@@ -48,6 +48,22 @@ data Set a = Set { unSet :: BinaryTree a }
    do not work properly, it is impossible to test your other functions, and you
    will fail the coursework!
 -}
+
+treeBalanceFactor :: BinaryTree a -> Int
+treeBalanceFactor Empty = 0
+treeBalanceFactor (Node _ left right) = treeHeight left - treeHeight right
+
+treeHeight :: BinaryTree a -> Int
+treeHeight Empty = 0
+treeHeight (Node _ Empty Empty) = 1
+treeHeight (Node _ left Empty) = 1 + treeHeight left
+treeHeight (Node _ Empty right) = 1 + treeHeight right
+treeHeight (Node _ left right)
+  | leftHeight < rightHeight = 1 + rightHeight
+  | otherwise = 1 + leftHeight -- when leftHeight >= rightHeight
+  where
+    leftHeight = treeHeight left
+    rightHeight = treeHeight right
 
 treeRemove :: Ord a => a -> BinaryTree a -> BinaryTree a
 treeRemove _ Empty = Empty
@@ -65,9 +81,6 @@ treeRemove _ (Node _ left right) = Node newKey left (treeRemove newKey right) --
     minKey (Node key Empty _) = key
     minKey (Node _ left _) = minKey left
 
--- treeMap :: (a -> b) -> BinaryTree a -> BinaryTree b
--- treeMap f Empty = Empty
--- treeMap f (Node x left right) = Node (f x) (treeMap f left) (treeMap f right)
 treeMap :: Ord b => (a -> b) -> BinaryTree a -> BinaryTree b
 treeMap f tree = treeMapMerge f tree Empty
   where
@@ -213,6 +226,7 @@ powerSet s = fromList $ map fromList $ allSubLists $ toList s
         subLists _ 0 = [[]]
         subLists [] _ = []
         subLists (x:xs) size = map (x :) (subLists xs (size - 1)) ++ subLists xs size
+-- powerSet s = fromList $ map fromList $ subsequences $ toList s
 
 {-
    ON MARKING:
