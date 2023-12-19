@@ -37,10 +37,23 @@ import Test.QuickCheck
    You need to define a Set datatype.
 -}
 
--- Binary search tree
+-- binary search tree
 data BinaryTree a = Empty | Node a (BinaryTree a) (BinaryTree a)
 
 data Set a = Set { unSet :: BinaryTree a }
+
+-- prints the binary search tree that the set wraps sideways
+-- example usage: putStr $ printSet $ fromList [1,4,2,3,9,8,6,7,5]
+-- doesn't currently work with printing out powersets
+-- powersets can be shown as a list using: map toList $ toList $ powerSet $ fromList [1,2,3,4]
+printSet :: Show a => Set a -> String
+printSet s = printTree (unSet s) 0
+    where
+        printTree Empty _ = ""
+        printTree (Node x left right) indent =
+            printTree right (indent + 4) ++
+            replicate indent ' ' ++ show x ++ "\n" ++
+            printTree left (indent + 4)
 
 {-
    PART 2.
