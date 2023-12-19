@@ -65,11 +65,17 @@ treeRemove _ (Node _ left right) = Node newKey left (treeRemove newKey right) --
     minKey (Node key Empty _) = key
     minKey (Node _ left _) = minKey left
 
-treeMap :: (a -> b) -> BinaryTree a -> BinaryTree b
-treeMap f Empty = Empty
-treeMap f (Node x left right) = Node (f x) (treeMap f left) (treeMap f right)
+-- treeMap :: (a -> b) -> BinaryTree a -> BinaryTree b
+-- treeMap f Empty = Empty
+-- treeMap f (Node x left right) = Node (f x) (treeMap f left) (treeMap f right)
+treeMap :: Ord b => (a -> b) -> BinaryTree a -> BinaryTree b
+treeMap f tree = treeMapMerge f tree Empty
+  where
+    treeMapMerge f Empty newTree = newTree
+    treeMapMerge f (Node x left right) newTree = treeMapMerge f right $ treeMapMerge f left $ treeInsert (f x) newTree
 
 treeMerge :: Ord a => BinaryTree a -> BinaryTree a -> BinaryTree a
+treeMerge tree1 Empty = tree1
 treeMerge Empty tree2 = tree2
 treeMerge (Node x left right) tree2 = treeMerge right $ treeMerge left $ treeInsert x tree2
 
@@ -144,8 +150,6 @@ insert :: (Ord a) => a -> Set a -> Set a
 insert x s = Set { unSet = treeInsert x $ unSet s }
 
 -- join two Sets together be careful not to introduce duplicates.
--- union :: (Ord a) => Set a -> Set a -> Set a
--- union s1 s2 = Set { unSet = foldr treeInsert (unSet s1) (toList s2) }
 union :: (Ord a) => Set a -> Set a -> Set a
 union s1 s2 = Set { unSet = treeMerge (unSet s1) (unSet s2) }
 
@@ -201,11 +205,9 @@ instance (Ord a) => Ord (Set a) where
 
 -- powerset of a set
 -- powerset {1,2} => { {}, {1}, {2}, {1,2} }
--- NEED TO CREATE CUSTOM ORD CLASS FOR SETS
 powerSet :: (Ord a) => Set a -> Set (Set a)  -- CHANGED FUNCTION SIGNATURE TO ADD Ord a
 powerSet s = fromList $ map fromList $ allSubLists $ toList s
   where
-    allSubLists :: [a] -> [[a]]
     allSubLists xs = concatMap (subLists xs) [0..length xs]
       where
         subLists _ 0 = [[]]
