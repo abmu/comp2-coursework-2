@@ -38,7 +38,7 @@ import Test.QuickCheck
 -}
 
 -- binary search tree
-data BinaryTree a = Empty | Node a (BinaryTree a) (BinaryTree a)
+data BinaryTree a = Empty | Node a (BinaryTree a) (BinaryTree a) Int
 
 data Set a = Set { unSet :: BinaryTree a }
 
@@ -50,9 +50,9 @@ printSet :: Show a => Set a -> String
 printSet s = printTree (unSet s) 0
     where
         printTree Empty _ = ""
-        printTree (Node x left right) indent =
+        printTree (Node x left right height) indent =
             printTree right (indent + 4) ++
-            replicate indent ' ' ++ show x ++ "\n" ++
+            replicate indent ' ' ++ show x ++ "(" ++ show height ++ ")\n" ++
             printTree left (indent + 4)
 
 {-
@@ -64,68 +64,63 @@ printSet s = printTree (unSet s) 0
 
 treeBalanceFactor :: BinaryTree a -> Int
 treeBalanceFactor Empty = 0
-treeBalanceFactor (Node _ left right) = treeHeight left - treeHeight right
+treeBalanceFactor (Node _ left right _) = treeHeight left - treeHeight right
 
 treeHeight :: BinaryTree a -> Int
 treeHeight Empty = 0
-treeHeight (Node _ Empty Empty) = 1
-treeHeight (Node _ left Empty) = 1 + treeHeight left
-treeHeight (Node _ Empty right) = 1 + treeHeight right
-treeHeight (Node _ left right)
-  | leftHeight < rightHeight = 1 + rightHeight
-  | otherwise = 1 + leftHeight -- when leftHeight >= rightHeight
-  where
-    leftHeight = treeHeight left
-    rightHeight = treeHeight right
+treeHeight (Node _ _ _ height) = height
 
 treeRemove :: Ord a => a -> BinaryTree a -> BinaryTree a
 treeRemove _ Empty = Empty
-treeRemove x (Node y left right)
-  | x < y = Node y (treeRemove x left) right
-  | x > y = Node y left (treeRemove x right)
+treeRemove x (Node y left right _)
+  | x < y = createTreeNode y (treeRemove x left) right
+  | x > y = createTreeNode y left (treeRemove x right)
 -- otherwise x == y
 -- NOT NEEDED --> treeRemove _ (Node _ Empty Empty) = Empty
-treeRemove _ (Node _ left Empty) = left
-treeRemove _ (Node _ Empty right) = right
-treeRemove _ (Node _ left right) = Node newKey left (treeRemove newKey right) -- newKey is the in order traversal successor
+treeRemove _ (Node _ left Empty _) = left
+treeRemove _ (Node _ Empty right _) = right
+treeRemove _ (Node _ left right _) = createTreeNode newKey left (treeRemove newKey right) -- newKey is the in order traversal successor
   where
     newKey = minKey right
     -- minKey function only works with non empty tree
-    minKey (Node key Empty _) = key
-    minKey (Node _ left _) = minKey left
+    minKey (Node key Empty _ _) = key
+    minKey (Node _ left _ _) = minKey left
 
 treeMap :: Ord b => (a -> b) -> BinaryTree a -> BinaryTree b
 treeMap f tree = treeMapMerge f tree Empty
   where
     treeMapMerge f Empty newTree = newTree
-    treeMapMerge f (Node x left right) newTree = treeMapMerge f right $ treeMapMerge f left $ treeInsert (f x) newTree
+    treeMapMerge f (Node x left right _) newTree = treeMapMerge f right $ treeMapMerge f left $ treeInsert (f x) newTree
 
 treeMerge :: Ord a => BinaryTree a -> BinaryTree a -> BinaryTree a
 treeMerge tree1 Empty = tree1
 treeMerge Empty tree2 = tree2
-treeMerge (Node x left right) tree2 = treeMerge right $ treeMerge left $ treeInsert x tree2
+treeMerge (Node x left right _) tree2 = treeMerge right $ treeMerge left $ treeInsert x tree2
 
 treeSize :: BinaryTree a -> Int
 treeSize Empty = 0
-treeSize (Node _ left right) = 1 + treeSize left + treeSize right
+treeSize (Node _ left right _) = 1 + treeSize left + treeSize right
 
 treeSearch :: Ord a => a -> BinaryTree a -> Bool
 treeSearch _ Empty = False
-treeSearch x (Node y left right)
+treeSearch x (Node y left right _)
   | x < y = treeSearch x left
   | x > y = treeSearch x right
   | otherwise = True
 
 inOrderTraversal :: BinaryTree a -> [a]
 inOrderTraversal Empty = []
-inOrderTraversal (Node x left right) = inOrderTraversal left ++ [x] ++ inOrderTraversal right
+inOrderTraversal (Node x left right _) = inOrderTraversal left ++ [x] ++ inOrderTraversal right
 
 treeInsert :: Ord a => a -> BinaryTree a -> BinaryTree a
-treeInsert x Empty = Node x Empty Empty
-treeInsert x (Node y left right)
-  | x < y = Node y (treeInsert x left) right
-  | x > y = Node y left (treeInsert x right)
-  | otherwise = Node y left right -- keep tree the same if the element is already in it
+treeInsert x Empty = Node x Empty Empty 1
+treeInsert x (Node y left right height)
+  | x < y = createTreeNode y (treeInsert x left) right
+  | x > y = createTreeNode y left (treeInsert x right)
+  | otherwise = Node y left right height -- keep tree the same if the element is already in it
+
+createTreeNode :: a -> BinaryTree a -> BinaryTree a -> BinaryTree a
+createTreeNode x left right = Node x left right $ 1 + max (treeHeight left) (treeHeight right)
 
 -- toList {2,1,4,3} => [1,2,3,4]
 -- the output must be sorted.
@@ -168,7 +163,7 @@ null _ = False
 
 -- build a one element Set
 singleton :: a -> Set a
-singleton x = Set { unSet = Node x Empty Empty }
+singleton x = Set { unSet = Node x Empty Empty 1 }
 
 -- insert an element *x* of type *a* into Set *s* make sure there are no
 -- duplicates!
@@ -218,6 +213,7 @@ setmap :: (Ord b) => (a -> b) -> Set a -> Set b
 setmap f s = Set { unSet = treeMap f $ unSet s }
 
 -- right fold a Set using a function *f*
+-- applies foldr to sorted list version of set
 setfoldr :: (Ord a) => (a -> b -> b) -> Set a -> b -> b -- CHANGED FUNCTION SIGNATURE TO ADD Ord a
 setfoldr f s acc = foldr f acc $ toList s
 
