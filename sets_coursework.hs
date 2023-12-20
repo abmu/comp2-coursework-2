@@ -40,7 +40,7 @@ import Test.QuickCheck
 -- AVL tree - self-balancing binary search tree
 data BinaryTree a = Empty | Node a (BinaryTree a) (BinaryTree a) Int
 
-data Set a = Set { unSet :: BinaryTree a }
+newtype Set a = Set { unSet :: BinaryTree a }
 
 -- prints the the binary search tree sideways, with the nodes in the format key(height/balance factor)
 -- example usage: putStr $ printSet $ fromList [1,4,2,3,9,8,6,7,5]
