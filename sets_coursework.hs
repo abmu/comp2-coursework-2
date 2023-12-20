@@ -37,12 +37,12 @@ import Test.QuickCheck
    You need to define a Set datatype.
 -}
 
--- binary search tree
+-- AVL tree - self-balancing binary search tree
 data BinaryTree a = Empty | Node a (BinaryTree a) (BinaryTree a) Int
 
 data Set a = Set { unSet :: BinaryTree a }
 
--- prints the binary search tree that the set wraps sideways
+-- prints the the binary search tree sideways, with the nodes in the format key(height/balance factor)
 -- example usage: putStr $ printSet $ fromList [1,4,2,3,9,8,6,7,5]
 -- doesn't currently work with printing out powersets
 -- powersets can be shown as a list using: map toList $ toList $ powerSet $ fromList [1,2,3,4]
@@ -51,9 +51,9 @@ printSet s = printTree (unSet s) 0
     where
         printTree Empty _ = ""
         printTree (Node x left right height) indent =
-            printTree right (indent + 4) ++
-            replicate indent ' ' ++ show x ++ "(" ++ show height ++ ")\n" ++
-            printTree left (indent + 4)
+            printTree right (indent + 10) ++
+            replicate indent ' ' ++ show x ++ "(" ++ show height ++ "/" ++ show (treeBalanceFactor (Node x left right height)) ++ ")\n" ++
+            printTree left (indent + 10)
 
 {-
    PART 2.
@@ -61,6 +61,36 @@ printSet s = printTree (unSet s) 0
    do not work properly, it is impossible to test your other functions, and you
    will fail the coursework!
 -}
+
+rightRotate :: BinaryTree a -> BinaryTree a
+rightRotate (Node x (Node y yLeft yRight _) xRight _) = createTreeNode y yLeft (createTreeNode x yRight xRight)
+
+leftRotate :: BinaryTree a -> BinaryTree a
+leftRotate (Node x xLeft (Node y yLeft yRight _) _) = createTreeNode y (createTreeNode x xLeft yLeft) yRight
+
+leftRightRotate :: BinaryTree a -> BinaryTree a
+leftRightRotate (Node x left right _) = rightRotate $ createTreeNode x (leftRotate left) right
+
+rightLeftRotate :: BinaryTree a -> BinaryTree a
+rightLeftRotate (Node x left right _) = leftRotate $ createTreeNode x left (rightRotate right)
+
+leftSubtree :: BinaryTree a -> BinaryTree a
+leftSubtree Empty = Empty
+leftSubtree (Node _ left _ _) = left
+
+rightSubtree :: BinaryTree a -> BinaryTree a
+rightSubtree Empty = Empty
+rightSubtree (Node _ _ right _) = right
+
+avlBalance :: BinaryTree a -> BinaryTree a
+avlBalance tree
+  | treeBalanceFactor tree > 1 =
+    if treeBalanceFactor (leftSubtree tree) >= 0 then rightRotate tree
+    else leftRightRotate tree -- treeBalanceFactor (leftSubtree tree) < 0
+  | treeBalanceFactor tree < -1 =
+    if treeBalanceFactor (rightSubtree tree) <= 0 then leftRotate tree
+    else rightLeftRotate tree -- treeBalanceFactor (rightSubtree tree) > 0
+  | otherwise = tree
 
 treeBalanceFactor :: BinaryTree a -> Int
 treeBalanceFactor Empty = 0
@@ -73,13 +103,13 @@ treeHeight (Node _ _ _ height) = height
 treeRemove :: Ord a => a -> BinaryTree a -> BinaryTree a
 treeRemove _ Empty = Empty
 treeRemove x (Node y left right _)
-  | x < y = createTreeNode y (treeRemove x left) right
-  | x > y = createTreeNode y left (treeRemove x right)
+  | x < y = avlBalance $ createTreeNode y (treeRemove x left) right
+  | x > y = avlBalance $ createTreeNode y left (treeRemove x right)
 -- otherwise x == y
 -- NOT NEEDED --> treeRemove _ (Node _ Empty Empty) = Empty
 treeRemove _ (Node _ left Empty _) = left
 treeRemove _ (Node _ Empty right _) = right
-treeRemove _ (Node _ left right _) = createTreeNode newKey left (treeRemove newKey right) -- newKey is the in order traversal successor
+treeRemove _ (Node _ left right _) = avlBalance $ createTreeNode newKey left (treeRemove newKey right) -- newKey is the in order traversal successor
   where
     newKey = minKey right
     -- minKey function only works with non empty tree
@@ -115,8 +145,8 @@ inOrderTraversal (Node x left right _) = inOrderTraversal left ++ [x] ++ inOrder
 treeInsert :: Ord a => a -> BinaryTree a -> BinaryTree a
 treeInsert x Empty = Node x Empty Empty 1
 treeInsert x (Node y left right height)
-  | x < y = createTreeNode y (treeInsert x left) right
-  | x > y = createTreeNode y left (treeInsert x right)
+  | x < y = avlBalance $ createTreeNode y (treeInsert x left) right
+  | x > y = avlBalance $ createTreeNode y left (treeInsert x right)
   | otherwise = Node y left right height -- keep tree the same if the element is already in it
 
 createTreeNode :: a -> BinaryTree a -> BinaryTree a -> BinaryTree a
@@ -129,7 +159,7 @@ toList = inOrderTraversal . unSet
 
 -- fromList: do not forget to remove duplicates!
 fromList :: Ord a => [a] -> Set a
-fromList xs = Set { unSet = foldr treeInsert Empty xs }
+fromList xs = Set { unSet = foldr treeInsert Empty $ reverse xs } -- the list is first reversed before elements are inserted, since the elements are inserted starting with the last element and ending with the first 
 
 -- Make sure you satisfy this property. If it fails, then all of the functions
 -- on Part 3 will also fail their tests
