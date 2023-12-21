@@ -42,7 +42,7 @@ data BinaryTree a = Empty | Node a (BinaryTree a) (BinaryTree a) Int
 
 newtype Set a = Set { unSet :: BinaryTree a }
 
--- prints the the binary search tree sideways, with the nodes in the format key(height/balance factor)
+-- prints the the binary search tree sideways, also showing the height and balance factor of each node
 -- example usage: putStr $ printSet $ fromList [1,4,2,3,9,8,6,7,5]
 -- doesn't currently work with printing out powersets
 -- powersets can be shown as a list using: map toList $ toList $ powerSet $ fromList [1,2,3,4]
@@ -244,6 +244,8 @@ setmap f s = Set { unSet = treeMap f $ unSet s }
 
 -- right fold a Set using a function *f*
 -- applies foldr to sorted list version of set
+-- setfoldr :: (a -> b -> b) -> Set a -> b -> b
+-- setfoldr f s acc = foldr f acc $ inOrderTraversal $ unSet s
 setfoldr :: (Ord a) => (a -> b -> b) -> Set a -> b -> b -- CHANGED FUNCTION SIGNATURE TO ADD Ord a
 setfoldr f s acc = foldr f acc $ toList s
 
