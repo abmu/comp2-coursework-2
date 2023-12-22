@@ -40,6 +40,9 @@ import Test.QuickCheck
 -- AVL tree - self-balancing binary search tree
 data BinaryTree a = Empty | Node a (BinaryTree a) (BinaryTree a) Int
 
+-- you **MUST** change this to your own data type. The declaration of Set a =
+-- Int is just to allow you to load the file into ghci without an error, it
+-- cannot be used to represent a set.
 newtype Set a = Set { unSet :: BinaryTree a }
 
 -- prints the the binary search tree sideways, also showing the height and balance factor of each node
