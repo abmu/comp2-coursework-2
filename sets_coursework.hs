@@ -45,7 +45,7 @@ data BinaryTree a = Empty | Node a (BinaryTree a) (BinaryTree a) Int
 -- cannot be used to represent a set.
 newtype Set a = Set { unSet :: BinaryTree a }
 
--- prints the the binary search tree sideways, also showing the height and balance factor of each node
+-- prints the the self-balancing binary search tree sideways, also showing the height and balance factor of each node
 -- example usage: putStr $ printSet $ fromList [1,4,2,3,9,8,6,7,5]
 -- doesn't currently work with printing out powersets
 -- powersets can be shown as a list using: map toList $ toList $ powerSet $ fromList [1,2,3,4]
