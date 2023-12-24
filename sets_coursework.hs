@@ -119,11 +119,26 @@ treeRemove _ (Node _ left right _) = avlBalance $ createTreeNode newKey left (tr
     minKey (Node key Empty _ _) = key
     minKey (Node _ left _ _) = minKey left
 
+treeFoldr :: (a -> b -> b) -> BinaryTree a -> b -> b
+treeFoldr _ Empty acc = acc
+treeFoldr f (Node x left right _) acc = treeFoldr f left $ f x $ treeFoldr f right acc
+
 treeMap :: Ord b => (a -> b) -> BinaryTree a -> BinaryTree b
 treeMap f tree = treeMapMerge f tree Empty
   where
     treeMapMerge f Empty newTree = newTree
     treeMapMerge f (Node x left right _) newTree = treeMapMerge f right $ treeMapMerge f left $ treeInsert (f x) newTree
+
+treeCommon :: Ord a => BinaryTree a -> BinaryTree a -> BinaryTree a
+treeCommon _ Empty = Empty
+treeCommon Empty _ = Empty
+treeCommon tree1 tree2 = treeCommonNodes tree1 tree2 Empty
+  where
+    treeCommonNodes Empty _ newTree = newTree
+    treeCommonNodes (Node x left right _) tree2 newTree = treeCommonNodes right tree2 $ treeCommonNodes left tree2 $ treeInsertCommon x newTree tree2
+    treeInsertCommon x newTree tree2
+      | treeSearch x tree2 = treeInsert x newTree
+      | otherwise = newTree
 
 treeMerge :: Ord a => BinaryTree a -> BinaryTree a -> BinaryTree a
 treeMerge tree1 Empty = tree1
@@ -209,15 +224,21 @@ union s1 s2 = Set { unSet = treeMerge (unSet s1) (unSet s2) }
 
 -- return, as a Set, the common elements between two Sets
 intersection :: (Ord a) => Set a -> Set a -> Set a
-intersection s1 s2 = fromList $ getCommon (toList s1) (toList s2) []
-  where
-    -- getCommon function only works with sorted lists
-    getCommon [] _ acc = acc
-    getCommon _ [] acc = acc
-    getCommon l1 l2 acc
-      | head l1 < head l2 = getCommon (tail l1) l2 acc
-      | head l1 > head l2 = getCommon l1 (tail l2) acc
-      | otherwise = getCommon (tail l1) (tail l2) (head l1 : acc) -- add to acc when head of both lists are equal
+-- intersection s1 s2 = fromList $ getCommon (toList s1) (toList s2) []
+--   where
+--     -- getCommon function only works with sorted lists
+--     getCommon [] _ acc = acc
+--     getCommon _ [] acc = acc
+--     getCommon l1 l2 acc
+--       | head l1 < head l2 = getCommon (tail l1) l2 acc
+--       | head l1 > head l2 = getCommon l1 (tail l2) acc
+--       | otherwise = getCommon (tail l1) (tail l2) (head l1 : acc) -- add to acc when head of both lists are equal
+intersection s1 s2 = Set { unSet = treeCommon (unSet s1) (unSet s2) }
+
+intersectionProp :: IO ()
+intersectionProp =
+  quickCheck
+    ((\xs ys -> toList (intersection (fromList xs) (fromList ys)) == HS.toList (HS.intersection (HS.fromList xs) (HS.fromList ys))) :: [Int] -> [Int] -> Bool)
 
 -- all the elements in *s1* not in *s2*
 -- {1,2,3,4} `difference` {3,4} => {1,2}
@@ -247,10 +268,8 @@ setmap f s = Set { unSet = treeMap f $ unSet s }
 
 -- right fold a Set using a function *f*
 -- applies foldr to sorted list version of set
--- setfoldr :: (a -> b -> b) -> Set a -> b -> b
--- setfoldr f s acc = foldr f acc $ inOrderTraversal $ unSet s
-setfoldr :: (Ord a) => (a -> b -> b) -> Set a -> b -> b -- CHANGED FUNCTION SIGNATURE TO ADD Ord a
-setfoldr f s acc = foldr f acc $ toList s
+setfoldr :: (a -> b -> b) -> Set a -> b -> b
+setfoldr f s acc = treeFoldr f (unSet s) acc
 
 -- remove an element *x* from the set
 -- return the set unaltered if *x* is not present
