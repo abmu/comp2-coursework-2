@@ -2,6 +2,10 @@ import Test.QuickCheck
 import Coursework
 import qualified Data.Set as HS
 
+-- NOTE: the coursework file must be named 'Coursework.hs'
+-- use the following command to run the tests (interpreted)
+-- runhaskell CourseworkTest.hs
+
 emptyProp :: IO ()
 emptyProp
   | toList empty == ([] :: [Int]) = putStrLn "+++ OK, passed 1 test."
