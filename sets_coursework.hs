@@ -129,6 +129,17 @@ treeMap f tree = treeMapMerge f tree Empty
     treeMapMerge f Empty newTree = newTree
     treeMapMerge f (Node x left right _) newTree = treeMapMerge f right $ treeMapMerge f left $ treeInsert (f x) newTree
 
+treeDifference :: Ord a => BinaryTree a -> BinaryTree a -> BinaryTree a
+treeDifference tree1 Empty = tree1
+treeDifference Empty _ = Empty
+treeDifference tree1 tree2 = treeDifferenceNodes tree1 tree2 Empty
+  where
+    treeDifferenceNodes Empty _ newTree = newTree
+    treeDifferenceNodes (Node x left right _) tree2 newTree = treeDifferenceNodes right tree2 $ treeDifferenceNodes left tree2 $ treeInsertDifference x newTree tree2
+    treeInsertDifference x newTree tree2
+      | treeSearch x tree2 = newTree
+      | otherwise = treeInsert x newTree
+
 treeCommon :: Ord a => BinaryTree a -> BinaryTree a -> BinaryTree a
 treeCommon _ Empty = Empty
 treeCommon Empty _ = Empty
@@ -235,24 +246,20 @@ intersection :: (Ord a) => Set a -> Set a -> Set a
 --       | otherwise = getCommon (tail l1) (tail l2) (head l1 : acc) -- add to acc when head of both lists are equal
 intersection s1 s2 = Set { unSet = treeCommon (unSet s1) (unSet s2) }
 
-intersectionProp :: IO ()
-intersectionProp =
-  quickCheck
-    ((\xs ys -> toList (intersection (fromList xs) (fromList ys)) == HS.toList (HS.intersection (HS.fromList xs) (HS.fromList ys))) :: [Int] -> [Int] -> Bool)
-
 -- all the elements in *s1* not in *s2*
 -- {1,2,3,4} `difference` {3,4} => {1,2}
 -- {} `difference` {0} => {}
 difference :: (Ord a) => Set a -> Set a -> Set a
-difference s1 s2 = fromList $ getDifference (toList s1) (toList s2) []
-  where
-    -- getDifference function only works with sorted lists
-    getDifference [] _ acc = acc
-    getDifference l1 [] acc = acc ++ l1
-    getDifference l1 l2 acc
-      | head l1 < head l2 = getDifference (tail l1) l2 (head l1 : acc)
-      | head l1 > head l2 = getDifference l1 (tail l2) acc
-      | otherwise = getDifference (tail l1) (tail l2) acc -- if head of both lists are equal ignore them and go to the next element in both lists
+-- difference s1 s2 = fromList $ getDifference (toList s1) (toList s2) []
+--   where
+--     -- getDifference function only works with sorted lists
+--     getDifference [] _ acc = acc
+--     getDifference l1 [] acc = acc ++ l1
+--     getDifference l1 l2 acc
+--       | head l1 < head l2 = getDifference (tail l1) l2 (head l1 : acc)
+--       | head l1 > head l2 = getDifference l1 (tail l2) acc
+--       | otherwise = getDifference (tail l1) (tail l2) acc -- if head of both lists are equal ignore them and go to the next element in both lists
+difference s1 s2 = Set { unSet = treeDifference (unSet s1) (unSet s2) }
 
 -- is element *x* in the Set s1?
 member :: (Ord a) => a -> Set a -> Bool
@@ -269,7 +276,8 @@ setmap f s = Set { unSet = treeMap f $ unSet s }
 -- right fold a Set using a function *f*
 -- applies foldr to sorted list version of set
 setfoldr :: (a -> b -> b) -> Set a -> b -> b
-setfoldr f s acc = treeFoldr f (unSet s) acc
+-- setfoldr f s acc = treeFoldr f (unSet s) acc
+setfoldr f = treeFoldr f . unSet
 
 -- remove an element *x* from the set
 -- return the set unaltered if *x* is not present
@@ -317,3 +325,8 @@ powerSet s = fromList $ map fromList $ allSubLists $ toList s
    implementation. 100% is reserved for those brave few who write their own
    self-balancing binary tree.
 -}
+
+-- intersectionProp :: IO ()
+-- intersectionProp =
+  -- quickCheck
+    -- ((\xs ys -> toList (intersection (fromList xs) (fromList ys)) == HS.toList (HS.intersection (HS.fromList xs) (HS.fromList ys))) :: [Int] -> [Int] -> Bool)
