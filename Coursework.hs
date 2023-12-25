@@ -325,8 +325,3 @@ powerSet s = fromList $ map fromList $ allSubLists $ toList s
    implementation. 100% is reserved for those brave few who write their own
    self-balancing binary tree.
 -}
-
--- intersectionProp :: IO ()
--- intersectionProp =
-  -- quickCheck
-    -- ((\xs ys -> toList (intersection (fromList xs) (fromList ys)) == HS.toList (HS.intersection (HS.fromList xs) (HS.fromList ys))) :: [Int] -> [Int] -> Bool)
