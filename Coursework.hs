@@ -125,7 +125,7 @@ instance (Ord a) => Eq (BinaryTree a) where
 instance (Ord a) => Ord (BinaryTree a) where
   compare t1 t2 = compare (inOrderTraversal t1) (inOrderTraversal t2)
 
-treeSubsequences :: (Ord a) => BinaryTree a -> BinaryTree (BinaryTree a)
+treeSubsequences :: Ord a => BinaryTree a -> BinaryTree (BinaryTree a)
 treeSubsequences Empty = createTreeNode Empty Empty Empty
 treeSubsequences (Node x left right _) =
   let withoutXLeft = treeSubsequences left
@@ -313,6 +313,7 @@ powerSet s = fromList $ map fromList $ allSubLists $ toList s
         subLists [] _ = []
         subLists (x:xs) size = map (x :) (subLists xs (size - 1)) ++ subLists xs size
 -- powerSet s = fromList $ map fromList $ subsequences $ toList s
+-- powerSet s = Set { unSet = treeMap (\t -> Set { unSet = t }) $ treeSubsequences $ unSet s }
 
 {-
    ON MARKING:
