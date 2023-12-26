@@ -48,7 +48,7 @@ newtype Set a = Set { unSet :: BinaryTree a }
 -- prints the the self-balancing binary search tree sideways, also showing the height and balance factor of each node
 -- example usage: putStr $ printSet $ fromList [1,4,2,3,9,8,6,7,5]
 -- doesn't currently work with printing out powersets
--- powersets can be shown as a list using: map toList $ toList $ powerSet $ fromList [1,2,3,4]
+-- powersets can be shown as a list using: map toList $ toList $ powerSet $ fromList [1..4]
 printSet :: Show a => Set a -> String
 printSet s = printTree (unSet s) 0
     where
@@ -118,6 +118,21 @@ treeRemove _ (Node _ left right _) = avlBalance $ createTreeNode newKey left (tr
     -- minKey function only works with non empty tree
     minKey (Node key Empty _ _) = key
     minKey (Node _ left _ _) = minKey left
+
+instance (Ord a) => Eq (BinaryTree a) where
+  t1 == t2 = inOrderTraversal t1 == inOrderTraversal t2
+
+instance (Ord a) => Ord (BinaryTree a) where
+  compare t1 t2 = compare (inOrderTraversal t1) (inOrderTraversal t2)
+
+treeSubsequences :: (Ord a) => BinaryTree a -> BinaryTree (BinaryTree a)
+treeSubsequences Empty = createTreeNode Empty Empty Empty
+treeSubsequences (Node x left right _) =
+  let withoutXLeft = treeSubsequences left
+      withoutXRight = treeSubsequences right
+      withoutX = treeFoldr treeMerge (treeMap (\t -> treeMap (treeMerge t) withoutXLeft) withoutXRight) Empty
+      withX = treeMap (treeInsert x) withoutX
+  in treeMerge withoutX withX
 
 treeFoldr :: (a -> b -> b) -> BinaryTree a -> b -> b
 treeFoldr _ Empty acc = acc

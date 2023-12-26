@@ -6,6 +6,9 @@ import qualified Data.Set as HS
 -- use the following command to run the tests (interpreted)
 -- runhaskell CourseworkTest.hs
 
+-- use the following command in ghci to show the execution time of functions
+-- :set +s
+
 emptyProp :: IO ()
 emptyProp
   | toList empty == ([] :: [Int]) = putStrLn "+++ OK, passed 1 test."
